@@ -46,6 +46,32 @@ pipeline {
             }
         }
 
-   
+        stage('Push Build to GitHub') {
+            steps {
+                script {
+                    dir("${PROJECT_PATH}") {
+                        bat '''
+                        hostname
+                        git stash -u
+                        git checkout main
+                        git rm -r -f Build
+                        git rm -f index.html
+                        git commit -m "delete old Builds" || echo "Nothing to commit"
+                        git push origin main
+
+                        git checkout main
+                        git checkout develop -- Builds
+                        robocopy Builds\\WebGL\\ .\\ /move /e /copyall
+                        git rm -r -f Builds
+                        git add -f Build index.html
+                        git commit -m "adding new Builds" || echo "Nothing to commit"
+                        git push origin main
+                        git checkout develop
+                        git pull origin develop
+                        '''
+                    }
+                }
+            }
+        }  
     }
 }
